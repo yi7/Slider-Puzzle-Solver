@@ -98,9 +98,11 @@ void print_a_node(struct node *np)
 
 void find_path(struct node *cp, struct node *open, struct node *closed)
 {
-    int i, j, temp;
-    struct node *parent, *hp;
+    int i, j, temp, index;
+    char *solution[500];
+    struct node *hp;
 
+    index = 0;
     hp = closed;
     
     for(i = 0; i < N; i++)
@@ -127,7 +129,7 @@ void find_path(struct node *cp, struct node *open, struct node *closed)
             cp->board[i][j] = cp->board[i-1][j];
             cp->board[i-1][j] = temp;
             i--;
-            printf("DN ");
+            solution[index++] = "DN ";
         }
         else if(cp->direction == RT)
 	{
@@ -135,7 +137,7 @@ void find_path(struct node *cp, struct node *open, struct node *closed)
             cp->board[i][j] = cp->board[i][j-1];
             cp->board[i][j-1] = temp;
             j--;
-            printf("RT ");
+            solution[index++] = "RT ";
         }
         else if(cp->direction == UP)
 	{
@@ -143,7 +145,7 @@ void find_path(struct node *cp, struct node *open, struct node *closed)
             cp->board[i][j] = cp->board[i+1][j];
             cp->board[i+1][j] = temp;
             i++;
-            printf("UP ");
+            solution[index++] = "UP ";
         }
         else if(cp->direction == LT)
 	{
@@ -151,7 +153,7 @@ void find_path(struct node *cp, struct node *open, struct node *closed)
             cp->board[i][j] = cp->board[i][j+1];
             cp->board[i][j+1] = temp;
             j++;
-            printf("LT ");
+            solution[index++] = "LT ";
         }    
     
         while(hp && !check_board_equal(cp, hp))
@@ -161,7 +163,14 @@ void find_path(struct node *cp, struct node *open, struct node *closed)
 
         cp->direction = hp->direction;
         hp = closed;
-    }        
+    }
+
+    printf("Solution:\n");
+    for(index; index >= 0; index--)
+    {
+        printf(solution[index]);
+    }
+    printf("\n");
 }
 
 void print_nodes(struct node *np)
@@ -372,6 +381,7 @@ struct node *move(struct node *curr_pt, int a, int b, int x, int y, int dir)
     new_pt->board[N][1] = g;
     new_pt->board[N][2] = h;
     new_pt->direction = dir;    
+    new_pt->next = NULL;
 
     return new_pt;
 }
