@@ -15,6 +15,7 @@
 
 struct node
 {
+    int direction;
     int board[N+1][N];
     struct node *next;
 };
@@ -25,7 +26,6 @@ void find_path(struct node *cp, struct node *open, struct node *closed);
 int solvable(struct node *pt);
 int count_distance(int x, int y, int num);
 int check_board_equal(struct node *a, struct node *b);
-struct node * goal_found(struct node *curr_pt, struct node *goal_pt);
 
 struct node *start, *goal;
 struct node *initialize(int argc, char **argv);
@@ -35,6 +35,7 @@ struct node *append(struct node *temp_pt, struct node *succ_pt);
 struct node *filter(struct node *succ, struct node *hp);
 struct node *sort_nodes(struct node *list);
 struct node *merge(struct node *succ, struct node *open);
+struct node *goal_found(struct node *curr_pt, struct node *goal_pt);
 
 int main( int argc, char **argv )
 {
@@ -70,7 +71,7 @@ int main( int argc, char **argv )
         closed = append(curr_pt, closed);
         if(curr_pt = goal_found(succ, goal))
 	{
-            printf("goal found\n");
+            printf("Goal Found:\n");
             break;
         }
     }
@@ -82,7 +83,7 @@ int main( int argc, char **argv )
 
 void print_a_node(struct node *np)
 {
-    int i, j;
+    int i, j, x, y;
 
     for(i = 0; i < N + 1; i++)
     {
@@ -97,7 +98,70 @@ void print_a_node(struct node *np)
 
 void find_path(struct node *cp, struct node *open, struct node *closed)
 {
+    int i, j, temp;
+    struct node *parent, *hp;
+
+    hp = closed;
     
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+	{
+            if(cp->board[i][j] == 0)
+	    {
+                break;
+            }
+        }
+
+        if(j < N)
+	{
+            break;
+        }
+    }
+    
+    while(!check_board_equal(cp, start))
+    {
+        if(cp->direction == DN)
+	{
+            temp = cp->board[i][j];
+            cp->board[i][j] = cp->board[i-1][j];
+            cp->board[i-1][j] = temp;
+            i--;
+            printf("DN ");
+        }
+        else if(cp->direction == RT)
+	{
+            temp = cp->board[i][j];
+            cp->board[i][j] = cp->board[i][j-1];
+            cp->board[i][j-1] = temp;
+            j--;
+            printf("RT ");
+        }
+        else if(cp->direction == UP)
+	{
+            temp = cp->board[i][j];
+            cp->board[i][j] = cp->board[i+1][j];
+            cp->board[i+1][j] = temp;
+            i++;
+            printf("UP ");
+        }
+        else if(cp->direction == LT)
+	{
+            temp = cp->board[i][j];
+            cp->board[i][j] = cp->board[i][j+1];
+            cp->board[i][j+1] = temp;
+            j++;
+            printf("LT ");
+        }    
+    
+        while(hp && !check_board_equal(cp, hp))
+	{
+            hp = hp->next;
+        }
+
+        cp->direction = hp->direction;
+        hp = closed;
+    }        
 }
 
 void print_nodes(struct node *np)
@@ -155,19 +219,6 @@ int check_board_equal(struct node *a, struct node *b)
         }
     }
     return 1;
-}
-
-struct node *goal_found(struct node *curr_pt, struct node *goal_pt)
-{
-    while(curr_pt)
-    {
-        if(check_board_equal(curr_pt, goal_pt))
-	{
-	    return curr_pt;
-        }
-	curr_pt = curr_pt->next;
-    }
-    return NULL;
 }
 
 struct node *initialize(int argc, char **argv)
@@ -320,7 +371,7 @@ struct node *move(struct node *curr_pt, int a, int b, int x, int y, int dir)
     new_pt->board[N][0] = f;
     new_pt->board[N][1] = g;
     new_pt->board[N][2] = h;
-    new_pt->board[N][3] = dir;    
+    new_pt->direction = dir;    
 
     return new_pt;
 }
@@ -378,6 +429,7 @@ struct node *filter(struct node *succ, struct node *hp)
                 }
             }
             temp->next = NULL;
+            temp->direction = lsp->direction;
             fp = append(temp, fp);
         }
         lsp = lsp->next;
@@ -419,6 +471,10 @@ struct node *sort_nodes(struct node *list)
 		min->board[i][j] = temp;
 	    }
 	}
+        temp = head->direction;
+        head->direction = min->direction;
+        min->direction = temp;
+
 	head = head->next;
     }
     return list;    
@@ -449,6 +505,7 @@ struct node *merge(struct node *succ, struct node *open)
                 }
             }
             temp->next = NULL;
+            temp->direction = msucc->direction;
             s_list = append(temp, s_list);
             msucc = msucc->next;
         }
@@ -463,6 +520,7 @@ struct node *merge(struct node *succ, struct node *open)
                 }
             }
             temp->next = NULL;
+            temp->direction = mopen->direction;
             s_list = append(temp, s_list);
             mopen = mopen->next;
         }
@@ -492,4 +550,17 @@ struct node *merge(struct node *succ, struct node *open)
     }
 
     return s_list;
+}
+
+struct node *goal_found(struct node *curr_pt, struct node *goal_pt)
+{
+    while(curr_pt)
+    {
+        if(check_board_equal(curr_pt, goal_pt))
+	{
+	    return curr_pt;
+        }
+	curr_pt = curr_pt->next;
+    }
+    return NULL;
 }
