@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define N 3
+#define N 4
 #define DN 0
 #define RT 1
 #define UP 2
@@ -27,6 +27,7 @@ void print_nodes(struct node *np);
 void find_path(struct node *cp, struct node *open, struct node *closed);
 int solvable(struct node *pt);
 int count_distance(int x, int y, int num);
+int count_linear_conflict(struct node *curr_pt);
 int check_board_equal(struct node *a, struct node *b);
 
 struct node *start, *goal;
@@ -147,6 +148,8 @@ void find_path(struct node *cp, struct node *open, struct node *closed) {
         hp = closed;
     }
 
+    solution[index++] = "\0";
+
     printf("Solution:\n");
     for(index; index >= 0; index--) {
         printf(solution[index]);
@@ -183,6 +186,45 @@ int count_distance(int x, int y, int num) {
             }
         }
     }
+}
+
+int count_linear_conflict(struct node *curr_pt) {
+	int i, j, k, zflag;
+	int conflict = 0;
+
+	//Check horizontal conflict
+	for(i = 0; i < N; i++) {
+		for(j = 0; j < N; j++) {
+			zflag = 0;
+			for(k = j + 1; k < N; k++) {
+				if(curr_pt->board[i][j] == 0 || curr_pt->board[i][k] == 0) {
+					zflag++;
+					continue;
+				}
+				if(curr_pt->board[i][j] == goal->board[i][k]) {
+					conflict += k - j - zflag;
+				}
+			}
+		}
+	}
+
+	//Check vertical conflict
+	for(j = 0; j < N; j++) {
+		for(i = 0; i < N; i++) {
+			zflag = 0;
+			for(k = i + 1; k < N; k++) {
+				if(curr_pt->board[i][j] == 0 || curr_pt->board[k][j] == 0) {
+					zflag++;
+					continue;
+				}
+				if(curr_pt->board[i][j] == goal->board[k][j]) {
+					conflict += k - i - zflag;
+				}
+			}
+		}
+	}
+
+	return conflict * 2;
 }
 
 int check_board_equal(struct node *a, struct node *b) {
@@ -237,13 +279,7 @@ struct node *initialize(int argc, char **argv) {
     goal = temp_pt;
 
     printf("Goal State: \n");
-    for(i = 0; i < N + 1; i++) {
-        for(j = 0; j < N; j++) {
-            printf("%2d ", goal->board[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
+    print_a_node(goal);
 
     return start;  
 }
@@ -319,6 +355,7 @@ struct node *move(struct node *curr_pt, int a, int b, int x, int y, int dir) {
             }
         }
     }
+    h += count_linear_conflict(new_pt);
     f = g + h;
     
     new_pt->board[N][0] = f;
