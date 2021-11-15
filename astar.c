@@ -26,7 +26,7 @@ void print_a_node(struct node *np);
 void print_nodes(struct node *np);
 void find_path(struct node *cp, struct node *open, struct node *closed);
 int solvable(struct node *pt);
-int count_distance(int x, int y, int num);
+int count_manhattan_distance(struct node *curr_pt);
 int count_linear_conflict(struct node *curr_pt);
 int check_board_equal(struct node *a, struct node *b);
 
@@ -148,7 +148,7 @@ void find_path(struct node *cp, struct node *open, struct node *closed) {
         hp = closed;
     }
 
-    solution[index++] = "\0";
+    solution[index] = "\0";
 
     printf("Solution:\n");
     for(index; index >= 0; index--) {
@@ -176,16 +176,23 @@ int solvable(struct node *pt) {
     return total;
 }
 
-int count_distance(int x, int y, int num) {
-    int i, j;
+int count_manhattan_distance(struct node *curr_pt) {
+    int i, j, gx, gy;
+    int distance = 0;
 
     for(i = 0; i < N; i++) {
         for(j = 0; j < N; j++) {
-            if(goal->board[i][j] == num) {
-                return abs(x - i) + abs(y - j);
-            }
+        	if(curr_pt->board[i][j] == goal->board[i][j] || curr_pt->board[i][j] == 0) {
+        		continue;
+        	}
+            
+    		gx = (curr_pt->board[i][j] - 1) / N;
+    		gy = (curr_pt->board[i][j] - 1) % N;
+            distance += abs(i - gx) + abs(j - gy);
         }
     }
+
+    return distance;
 }
 
 int count_linear_conflict(struct node *curr_pt) {
@@ -347,15 +354,7 @@ struct node *move(struct node *curr_pt, int a, int b, int x, int y, int dir) {
     new_pt->board[x][y] = temp;
 
     g = new_pt->board[N][1] + 1;
-    h = 0;
-    for(i = 0; i < N; i++) {
-        for(j = 0; j < N; j++) {
-		    if(new_pt->board[i][j] - goal->board[i][j] != 0) {
-                h += count_distance(i, j, new_pt->board[i][j]);
-            }
-        }
-    }
-    h += count_linear_conflict(new_pt);
+    h = count_manhattan_distance(new_pt) + count_linear_conflict(new_pt);
     f = g + h;
     
     new_pt->board[N][0] = f;
